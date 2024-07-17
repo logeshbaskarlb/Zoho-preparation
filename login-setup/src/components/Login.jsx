@@ -1,5 +1,5 @@
 import { useFormik } from "formik";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { config } from "../config/config";
@@ -82,6 +82,14 @@ const Login = () => {
             <div className="text-red-500 text-sm">{formik.errors.password}</div>
           ) : null}
         </div>
+        <div className="text-center mt-3 flex justify-between text-red-500 ">
+  <div className="flex justify-center  text-white">
+    <Link className="no-underline text-gray-800 hover:text-red-600" to="/signup">
+      Create an Account!
+    </Link>
+  </div>
+</div>
+
         <button type="submit" className="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600">
           Submit
         </button>
