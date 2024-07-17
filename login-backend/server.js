@@ -47,44 +47,85 @@ app.post("/signup",async (req, res)=> {
 
 app.post("/login", async (req, res) => {
     try {
-    const  { email , password } = req.body
-    console.log(email);
-    const connection = await MongoClient.connect(URL);
-    const db = connection.db("users");
-    const user = await db.collection("Registered").findOne({
-      email,
-    });
-    if (!user) {
-      res.status(404).json({ message: "User or password not match!" });
-    } 
-      const passwordValid = await bcrypt.compare(password, user.password);
-      if (!passwordValid) {
-        res.status(404).json({ message: "User or password not match!" });
-      }
-        const token = jsonwebtoken.sign({ userId: user._id }, secretKey, {
-          expiresIn: "24h",
+        const { email, password } = req.body;
+        console.log(email , password);
+
+        const connection = await MongoClient.connect(URL);
+        const db = connection.db("users");
+
+        const user = await db.collection("Signup").findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: "User or password not match!" });
+        }
+
+        const passwordValid = await bcrypt.compare(password, user.password);
+        if (!passwordValid) {
+            return res.status(404).json({ message: "User or password not match!" });
+        }
+
+        const token = jsonwebtoken.sign({ userId: user._id }, process.env.SECRET_KEY, {
+            expiresIn: "24h",
         });
+
         res.status(200).json({
-          userId: user._id,
-          token,
+            userId: user._id,
+            token,
         });
         connection.close();
     } catch (error) {
         res.status(500).json({
             message: "Something went wrong"
-        })
+        });
     }
-})
+});
 
-app.post("/profile", async (req, res) => {
+
+app.get('/profile/:userId', async (req, res) => {
     try {
-        console.log();
+        const userId = req.params.userId;
+        const connection = await MongoClient.connect(URL, { useNewUrlParser: true, useUnifiedTopology: true });
+        const db = connection.db('users');
+
+        const user = await db.collection('Signup').findOne({ _id: ObjectId(userId) });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found!' });
+        }
+
+        res.status(200).json(user);
+        connection.close();
     } catch (error) {
+        console.log('Error occurred in profile:', error);
         res.status(500).json({
-            message: "Something went wrong"
-        })
+            message: 'Something went wrong'
+        });
     }
-})
+});
+
+app.put('/profile/:userId', async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        const { age, gender, dob, mobile } = req.body;
+        const connection = await MongoClient.connect(URL, { useNewUrlParser: true, useUnifiedTopology: true });
+        const db = connection.db('users');
+
+        const updatedUser = await db.collection('Signup').updateOne(
+            { _id: ObjectId(userId) },
+            { $set: { age, gender, dob, mobile } }
+        );
+
+        if (updatedUser.modifiedCount === 0) {
+            return res.status(404).json({ message: 'User not found!' });
+        }
+
+        res.status(200).json({ message: 'Profile updated successfully' });
+        connection.close();
+    } catch (error) {
+        console.log('Error occurred in profile update:', error);
+        res.status(500).json({
+            message: 'Something went wrong'
+        });
+    }
+});
 
 
 

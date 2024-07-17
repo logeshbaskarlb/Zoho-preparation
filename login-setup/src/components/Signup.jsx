@@ -38,7 +38,7 @@ const Signup = () => {
         toast.success(res.data.message, {
           position: "top-right",
         });
-        navigate("/");
+        navigate("/profile");
         formik.resetForm();
         console.log(values);
       } catch (error) {

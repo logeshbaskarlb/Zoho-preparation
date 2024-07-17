@@ -33,7 +33,9 @@ const Login = () => {
         toast.success(res.data.message, {
           position: "top-right",
         });
-        navigate("/profile");
+        localStorage.setItem('token', res.data.token);
+        localStorage.setItem('userId', res.data.userId);
+        navigate('/profile');
         formik.resetForm();
       } catch (error) {
         toast.error(

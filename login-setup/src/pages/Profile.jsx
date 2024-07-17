@@ -1,93 +1,103 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useFormik } from 'formik';
-import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 
 const Profile = () => {
-  const [user, setUser] = useState({});
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const userId = localStorage.getItem('userId'); // Assuming you store the userId in localStorage
 
   useEffect(() => {
-    // Fetch user details on component mount
-    const fetchUserDetails = async () => {
-      try {
-        const token = localStorage.getItem('token'); // Assuming token is stored in localStorage
-        const res = await axios.get('/api/profile', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setUser(res.data);
-      } catch (error) {
-        console.error("Error fetching user details", error);
-      }
-    };
-    fetchUserDetails();
-  }, []);
+    if (!userId) {
+      navigate('/');
+    } else {
+      fetchUserProfile();
+    }
+  }, [userId]);
+
+  const fetchUserProfile = async () => {
+    try {
+      const res = await axios.get(`http://localhost:5050/profile/${userId}`);
+      setUser(res.data);
+    } catch (error) {
+      console.log('Error fetching profile:', error);
+    }
+  };
 
   const formik = useFormik({
     initialValues: {
-      age: user.age || '',
-      gender: user.gender || '',
-      dob: user.dob || '',
-      mobile: user.mobile || '',
+      age: user?.age || '',
+      gender: user?.gender || '',
+      dob: user?.dob || '',
+      mobile: user?.mobile || '',
     },
     enableReinitialize: true,
     onSubmit: async (values) => {
       try {
-        const token = localStorage.getItem('token');
-        const res = await axios.put('/profile', values, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        toast.success("Profile updated successfully")
+        await axios.put(`http://localhost:5000/profile/${userId}`, values);
+        alert('Profile updated successfully');
       } catch (error) {
-        console.error("Error updating profile", error);
+        console.log('Error updating profile:', error);
+        alert('Something went wrong. Please try again.');
       }
     },
   });
 
   return (
-    <div className="max-w-md mx-auto mt-10">
-      <h2 className="text-xl font-bold mb-5">Profile</h2>
-      <form onSubmit={formik.handleSubmit} className="space-y-4">
-        <div>
+    <div className="max-w-md mx-auto p-4 bg-white shadow-md rounded">
+      <h2 className="text-xl font-bold mb-4">Profile</h2>
+      <form onSubmit={formik.handleSubmit}>
+        <div className="mb-4">
           <label className="block text-gray-700">Age</label>
           <input
             type="number"
             name="age"
-            className="w-full px-3 py-2 border rounded"
-            onChange={formik.handleChange}
+            className="mt-1 p-2 border rounded w-full"
             value={formik.values.age}
-          />
-        </div>
-        <div>
-          <label className="block text-gray-700">Gender</label>
-          <input
-            type="text"
-            name="gender"
-            className="w-full px-3 py-2 border rounded"
             onChange={formik.handleChange}
-            value={formik.values.gender}
           />
         </div>
-        <div>
+        <div className="mb-4">
+          <label className="block text-gray-700">Gender</label>
+          <select
+            name="gender"
+            className="mt-1 p-2 border rounded w-full"
+            value={formik.values.gender}
+            onChange={formik.handleChange}
+          >
+            <option value="">Select Gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div className="mb-4">
           <label className="block text-gray-700">Date of Birth</label>
           <input
             type="date"
             name="dob"
-            className="w-full px-3 py-2 border rounded"
-            onChange={formik.handleChange}
+            className="mt-1 p-2 border rounded w-full"
             value={formik.values.dob}
+            onChange={formik.handleChange}
           />
         </div>
-        <div>
+        <div className="mb-4">
           <label className="block text-gray-700">Mobile</label>
           <input
             type="text"
             name="mobile"
-            className="w-full px-3 py-2 border rounded"
-            onChange={formik.handleChange}
+            className="mt-1 p-2 border rounded w-full"
             value={formik.values.mobile}
+            onChange={formik.handleChange}
           />
         </div>
-        <button type="submit" className="w-full bg-blue-500 text-white py-2 rounded">Update Profile</button>
+        <button
+          type="submit"
+          className="bg-blue-500 text-white py-2 px-4 rounded"
+        >
+          Update Profile
+        </button>
       </form>
     </div>
   );
